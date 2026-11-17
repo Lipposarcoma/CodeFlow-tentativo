@@ -1,0 +1,576 @@
+/* ══════════════════════════════════════════════════════════
+   ACCESIBILIDAD — panel de preferencias y sus efectos en el sitio
+   Va con accesibilidad.js. Cárgalo DESPUÉS de index.css y del resto
+   de las hojas de estilo, para que sus reglas ganen.
+
+   Cómo funciona: el JS escribe atributos data-a11y-* y variables
+   (--a11y-fs, --a11y-btn) en <html>; este archivo las traduce a estilos.
+   El tamaño de texto necesita que los font-size del sitio usen
+   calc(Npx * var(--a11y-fs, 1)); eso lo hace convertir_css_accesibilidad.py
+   ══════════════════════════════════════════════════════════ */
+
+/* ══════════════════════════════════════════════════════════
+   1. VALORES POR DEFECTO
+   ══════════════════════════════════════════════════════════ */
+:root{
+  --a11y-fs:1;     /* escala del texto (1 = 100%) */
+  --a11y-btn:1;    /* escala de botones y controles */
+}
+
+/* ══════════════════════════════════════════════════════════
+   2. FUENTE Y ESPACIADO
+   (--font-main y --font-display ya las usa todo el sitio)
+   ══════════════════════════════════════════════════════════ */
+html[data-a11y-fuente="legible"]{
+  --font-main:'Atkinson Hyperlegible','Segoe UI',Arial,sans-serif;
+  --font-display:'Atkinson Hyperlegible','Segoe UI',Arial,sans-serif;
+}
+html[data-a11y-fuente="dislexia"]{
+  --font-main:'OpenDyslexic','Comic Sans MS','Segoe UI',Arial,sans-serif;
+  --font-display:'OpenDyslexic','Comic Sans MS','Segoe UI',Arial,sans-serif;
+}
+html[data-a11y-esp="amplio"] body{
+  line-height:1.7;
+  letter-spacing:.03em;
+  word-spacing:.06em;
+}
+html[data-a11y-esp="muy_amplio"] body{
+  line-height:1.95;
+  letter-spacing:.06em;
+  word-spacing:.12em;
+}
+
+/* ══════════════════════════════════════════════════════════
+   3. TAMAÑO DE BOTONES Y CONTROLES
+   Solo se activa cuando la escala es mayor a 100%.
+   ══════════════════════════════════════════════════════════ */
+html[data-a11y-btn="on"] :is(button,select,.nav-item,.option-item,.challenge-opt,
+  input:not([type="range"],[type="color"],[type="checkbox"],[type="radio"])){
+  min-height:calc(38px * var(--a11y-btn));
+}
+html[data-a11y-btn="on"] :is(.theme-toggle,.a11y-trigger,.a11y-fab){
+  min-width:calc(38px * var(--a11y-btn));
+  min-height:calc(38px * var(--a11y-btn));
+}
+html[data-a11y-btn="on"] .topbar{
+  height:calc(44px * var(--a11y-btn));
+}
+
+/* ══════════════════════════════════════════════════════════
+   4. REDUCIR ANIMACIONES
+   ══════════════════════════════════════════════════════════ */
+html[data-a11y-mov="off"] *,
+html[data-a11y-mov="off"] *::before,
+html[data-a11y-mov="off"] *::after{
+  animation:none !important;
+  transition:none !important;
+  scroll-behavior:auto !important;
+}
+html[data-a11y-mov="off"] #bg-canvas{
+  display:none;
+}
+
+/* ══════════════════════════════════════════════════════════
+   5. FOCO VISIBLE
+   Siempre hay un borde al navegar con teclado; la opción lo hace
+   más grueso y de alto contraste.
+   ══════════════════════════════════════════════════════════ */
+:focus-visible{
+  outline:2px solid var(--mod1);
+  outline-offset:2px;
+}
+html[data-a11y-foco="on"] :focus-visible{
+  outline:4px solid var(--yellow);
+  outline-offset:3px;
+  box-shadow:0 0 0 2px var(--bg);
+}
+
+/* ══════════════════════════════════════════════════════════
+   6. PALETAS DE COLOR
+   Reemplazan las variables de index.css. "Configuración propia" las
+   calcula el JS y las escribe directo en <html>.
+   ══════════════════════════════════════════════════════════ */
+
+/* — Alto contraste: fondo negro, texto blanco, bordes visibles — */
+html[data-a11y-paleta="alto"]{
+  --bg:#000000;--surface:#000000;--surface2:#0B0B0B;--surface3:#161616;
+  --border:rgba(255,255,255,.65);--border-h:#FFFFFF;
+  --text:#FFFFFF;--text2:#F2F2F2;--muted:#D4D4D4;--muted2:#A0A0A0;--shadow:rgba(0,0,0,.8);
+  --mod1:#66B5FF;--g1:rgba(102,181,255,.22);
+  --mod2:#DDA0FF;--g2:rgba(221,160,255,.22);
+  --mod3:#FFB066;--g3:rgba(255,176,102,.22);
+  --mod4:#4DF0A8;--g4:rgba(77,240,168,.22);
+  --mod5:#A9ACFF;--g5:rgba(169,172,255,.22);
+  --mod6:#FF8CC8;--g6:rgba(255,140,200,.22);
+  --boss:#FF6B6B;--boss-glow:rgba(255,107,107,.35);
+  --green:#4DFF88;--red:#FF6B6B;--yellow:#FFE600;--orange:#FFB066;
+}
+
+/* — Cálido: fondo crema, menos brillo, descansa la vista — */
+html[data-a11y-paleta="calido"]{
+  --bg:#F4EADB;--surface:#FBF5EA;--surface2:#F1E5D1;--surface3:#E6D6BC;
+  --border:rgba(70,45,20,.18);--border-h:rgba(70,45,20,.34);
+  --text:#2A2016;--text2:#4A3B2B;--muted:#76624D;--muted2:#BBA687;--shadow:rgba(70,45,20,.18);
+  --mod1:#2F6DB5;--g1:rgba(47,109,181,.16);
+  --mod2:#7B4BA8;--g2:rgba(123,75,168,.16);
+  --mod3:#B8530F;--g3:rgba(184,83,15,.16);
+  --mod4:#2A7D55;--g4:rgba(42,125,85,.16);
+  --mod5:#4650B3;--g5:rgba(70,80,179,.16);
+  --mod6:#B03A72;--g6:rgba(176,58,114,.16);
+  --boss:#B3261E;--boss-glow:rgba(179,38,30,.22);
+  --green:#2E7D32;--red:#C62828;--yellow:#9A6A00;--orange:#B8530F;
+}
+
+/* — Daltonismo: paleta de Okabe-Ito (se distingue en los tipos más comunes).
+     Acierto = azul, error = naranja; nunca rojo contra verde — */
+html[data-a11y-paleta="daltonismo"]{
+  --mod1:#56B4E9;--g1:rgba(86,180,233,.20);
+  --mod2:#CC79A7;--g2:rgba(204,121,167,.20);
+  --mod3:#E69F00;--g3:rgba(230,159,0,.20);
+  --mod4:#00B386;--g4:rgba(0,179,134,.20);
+  --mod5:#F0E442;--g5:rgba(240,228,66,.20);
+  --mod6:#D55E00;--g6:rgba(213,94,0,.20);
+  --boss:#D55E00;--boss-glow:rgba(213,94,0,.30);
+  --green:#56B4E9;--red:#E69F00;--yellow:#F0E442;--orange:#D55E00;
+}
+html[data-a11y-paleta="daltonismo"][data-theme="light"]{
+  --mod1:#0072B2;--g1:rgba(0,114,178,.14);
+  --mod2:#A64D79;--g2:rgba(166,77,121,.14);
+  --mod3:#B87800;--g3:rgba(184,120,0,.14);
+  --mod4:#007A5E;--g4:rgba(0,122,94,.14);
+  --mod5:#7A6F00;--g5:rgba(122,111,0,.14);
+  --mod6:#B34D00;--g6:rgba(179,77,0,.14);
+  --boss:#B34D00;--boss-glow:rgba(179,77,0,.2);
+  --green:#0072B2;--red:#B87800;--yellow:#7A6F00;--orange:#B34D00;
+}
+
+/* ══════════════════════════════════════════════════════════
+   7. ACIERTO / ERROR SIN DEPENDER DEL COLOR
+   En estas paletas cada respuesta lleva además un ícono y el error
+   usa borde punteado.
+   ══════════════════════════════════════════════════════════ */
+html:is([data-a11y-paleta="daltonismo"],[data-a11y-paleta="alto"]) :is(.option-item,.challenge-opt).correct-anim{
+  border-color:var(--green) !important;
+  background:color-mix(in srgb,var(--green) 16%,transparent) !important;
+}
+html:is([data-a11y-paleta="daltonismo"],[data-a11y-paleta="alto"]) :is(.option-item,.challenge-opt).wrong-anim{
+  border:2px dashed var(--red) !important;
+  background:color-mix(in srgb,var(--red) 14%,transparent) !important;
+}
+html:is([data-a11y-paleta="daltonismo"],[data-a11y-paleta="alto"]) :is(.option-item,.challenge-opt):is(.correct-anim,.wrong-anim)::after{
+  font-family:'Material Icons';
+  font-size:calc(20px * var(--a11y-fs,1));
+  line-height:1;
+  font-weight:400;
+  letter-spacing:normal;
+  float:right;                 /* en .challenge-opt (bloque) */
+  margin-left:auto;            /* en .option-item (flex) */
+}
+html:is([data-a11y-paleta="daltonismo"],[data-a11y-paleta="alto"]) :is(.option-item,.challenge-opt).correct-anim::after{
+  content:'check_circle';
+  color:var(--green);
+}
+html:is([data-a11y-paleta="daltonismo"],[data-a11y-paleta="alto"]) :is(.option-item,.challenge-opt).wrong-anim::after{
+  content:'cancel';
+  color:var(--red);
+}
+html:is([data-a11y-paleta="daltonismo"],[data-a11y-paleta="alto"]) .bug-line.correct-line{
+  background:color-mix(in srgb,var(--green) 22%,transparent);
+  border-left:4px solid var(--green);
+}
+html:is([data-a11y-paleta="daltonismo"],[data-a11y-paleta="alto"]) .bug-line.wrong-line{
+  background:color-mix(in srgb,var(--red) 22%,transparent);
+  border-left:4px dashed var(--red);
+}
+
+/* ══════════════════════════════════════════════════════════
+   8. BOTONES QUE ABREN EL PANEL
+   ══════════════════════════════════════════════════════════ */
+.a11y-trigger[aria-expanded="true"]{
+  border-color:var(--mod1);
+  background:var(--g1);
+}
+/* — Flotante: solo se muestra mientras está la pantalla de acceso — */
+.a11y-fab{
+  position:fixed;
+  top:14px;
+  right:16px;
+  z-index:310;
+  width:42px;
+  height:42px;
+  border-radius:10px;
+  background:var(--surface);
+  color:var(--text);
+  border:1px solid var(--border-h);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+.a11y-fab[hidden]{
+  display:none;
+}
+.a11y-fab[aria-expanded="true"]{
+  border-color:var(--mod1);
+  background:var(--g1);
+}
+
+/* ══════════════════════════════════════════════════════════
+   9. PANEL
+   ══════════════════════════════════════════════════════════ */
+.a11y-panel{
+  position:fixed;
+  top:58px;
+  right:16px;
+  z-index:700;
+  width:360px;
+  max-width:calc(100vw - 32px);
+  max-height:calc(100vh - 74px);
+  overflow-y:auto;
+  background:var(--surface);
+  color:var(--text);
+  border:1px solid var(--border-h);
+  border-radius:16px;
+  box-shadow:0 18px 50px var(--shadow);
+  font-family:var(--font-main);
+}
+.a11y-panel[hidden]{
+  display:none;
+}
+.a11y-head{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:16px 18px;
+  border-bottom:1px solid var(--border);
+  position:sticky;
+  top:0;
+  background:var(--surface);
+  z-index:1;
+}
+.a11y-head .material-icons{
+  color:var(--mod1);
+  font-size:calc(24px * var(--a11y-fs,1));
+}
+.a11y-title{
+  flex:1;
+  font-size:calc(17px * var(--a11y-fs,1));
+  font-weight:700;
+}
+.a11y-close{
+  width:36px;
+  height:36px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--surface2);
+  color:var(--text);
+  border:1px solid var(--border);
+  border-radius:9px;
+  cursor:pointer;
+}
+.a11y-sec{
+  padding:16px 18px;
+  border-bottom:1px solid var(--border);
+  min-width:0;
+}
+.a11y-sec-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  gap:8px;
+  padding:0;
+  width:100%;
+}
+.a11y-label{
+  font-size:calc(14.5px * var(--a11y-fs,1));
+  font-weight:700;
+  padding:0;
+}
+.a11y-valor{
+  font-size:calc(13.5px * var(--a11y-fs,1));
+  font-weight:700;
+  color:var(--mod1);
+}
+.a11y-desc{
+  font-size:calc(12.5px * var(--a11y-fs,1));
+  color:var(--muted);
+  margin:3px 0 12px;
+}
+.a11y-slider-fila{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.a11y-paso{
+  flex:none;
+  width:46px;
+  height:42px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--surface2);
+  color:var(--text);
+  border:1px solid var(--border-h);
+  border-radius:10px;
+  font:inherit;
+  font-size:calc(13.5px * var(--a11y-fs,1));
+  font-weight:800;
+  cursor:pointer;
+}
+.a11y-paso:disabled{
+  opacity:.4;
+  cursor:default;
+}
+.a11y-slider{
+  flex:1;
+  min-width:0;
+  accent-color:var(--mod1);
+  height:28px;
+  cursor:pointer;
+}
+
+/* — Tarjetas de opción (fuente, espaciado, paleta): son radios reales — */
+.a11y-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.a11y-grid.una-col{
+  grid-template-columns:1fr;
+}
+.a11y-grid.tres{
+  grid-template-columns:repeat(3,1fr);
+}
+.a11y-card{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  padding:12px;
+  background:var(--surface2);
+  border:1px solid var(--border-h);
+  border-radius:12px;
+  cursor:pointer;
+  font-size:calc(13px * var(--a11y-fs,1));
+  font-weight:700;
+}
+.a11y-card input{
+  position:absolute;
+  opacity:0;
+  inset:0;
+  width:100%;
+  height:100%;
+  margin:0;
+  cursor:pointer;
+}
+.a11y-card:has(input:checked){
+  border-color:var(--mod1);
+  background:var(--g1);
+  box-shadow:inset 0 0 0 1px var(--mod1);
+}
+.a11y-card:has(input:focus-visible){
+  outline:3px solid var(--yellow);
+  outline-offset:2px;
+}
+.a11y-grid.tres .a11y-card{
+  text-align:center;
+  padding:18px 6px 10px;
+}
+.a11y-grid.tres .a11y-check{
+  top:2px;
+  right:3px;
+  font-size:calc(14px * var(--a11y-fs,1));
+}
+.a11y-card.fila{
+  flex-direction:row;
+  align-items:center;
+  gap:12px;
+}
+.a11y-card.ancha{
+  grid-column:1 / -1;
+}
+.a11y-aa{
+  flex:none;
+  width:2.2em;
+  text-align:center;
+  font-size:calc(22px * var(--a11y-fs,1));
+  font-weight:700;
+}
+.a11y-card .a11y-check{
+  position:absolute;
+  top:8px;
+  right:8px;
+  font-size:calc(18px * var(--a11y-fs,1));
+  color:var(--mod1);
+  display:none;
+}
+.a11y-card:has(input:checked) .a11y-check{
+  display:block;
+}
+.a11y-card small{
+  font-size:calc(11.5px * var(--a11y-fs,1));
+  font-weight:500;
+  color:var(--muted);
+}
+.a11y-muestras{
+  display:flex;
+  gap:5px;
+}
+.a11y-muestras i{
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  border:1px solid var(--border-h);
+  display:block;
+}
+
+/* — Colores propios — */
+.a11y-propia{
+  margin-top:12px;
+  padding:12px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:12px;
+}
+.a11y-propia[hidden]{
+  display:none;
+}
+.a11y-color-fila{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:5px 0;
+  font-size:calc(13px * var(--a11y-fs,1));
+  font-weight:600;
+}
+.a11y-color-fila input[type="color"]{
+  width:52px;
+  height:34px;
+  padding:2px;
+  background:var(--surface);
+  border:1px solid var(--border-h);
+  border-radius:8px;
+  cursor:pointer;
+}
+.a11y-contraste{
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+  margin-top:10px;
+  padding:9px 10px;
+  border-radius:9px;
+  font-size:calc(12.5px * var(--a11y-fs,1));
+  font-weight:600;
+  border:1px solid var(--border-h);
+}
+.a11y-contraste .material-icons{
+  font-size:calc(18px * var(--a11y-fs,1));
+}
+.a11y-contraste.ok{
+  border-color:var(--green);
+}
+.a11y-contraste.mal{
+  border-color:var(--red);
+  border-style:dashed;
+}
+
+/* — Interruptores — */
+.a11y-switch{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:9px 0;
+  cursor:pointer;
+}
+.a11y-switch-txt{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  font-size:calc(13.5px * var(--a11y-fs,1));
+  font-weight:700;
+}
+.a11y-switch-txt small{
+  font-size:calc(12px * var(--a11y-fs,1));
+  font-weight:500;
+  color:var(--muted);
+}
+.a11y-switch input{
+  flex:none;
+  width:44px;
+  height:24px;
+  appearance:none;
+  -webkit-appearance:none;
+  border-radius:999px;
+  background:var(--surface3);
+  border:1px solid var(--border-h);
+  position:relative;
+  cursor:pointer;
+  margin:0;
+}
+.a11y-switch input::after{
+  content:'';
+  position:absolute;
+  top:2px;
+  left:2px;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  background:var(--text);
+  transition:transform .15s;
+}
+.a11y-switch input:checked{
+  background:var(--mod1);
+  border-color:var(--mod1);
+}
+.a11y-switch input:checked::after{
+  transform:translateX(20px);
+  background:var(--bg);
+}
+
+.a11y-pie{
+  padding:16px 18px 18px;
+}
+.a11y-nota{
+  font-size:calc(12px * var(--a11y-fs,1));
+  color:var(--muted);
+  margin:0 0 12px;
+}
+.a11y-reset{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:12px;
+  background:transparent;
+  color:var(--text2);
+  border:1px solid var(--border-h);
+  border-radius:12px;
+  font:inherit;
+  font-size:calc(13.5px * var(--a11y-fs,1));
+  font-weight:700;
+  cursor:pointer;
+}
+.a11y-reset .material-icons{
+  font-size:calc(18px * var(--a11y-fs,1));
+}
+.a11y-estado{
+  margin-top:10px;
+  min-height:1.2em;
+  font-size:calc(12px * var(--a11y-fs,1));
+  color:var(--muted);
+  text-align:center;
+}
+
+@media (max-width:560px){
+  .a11y-panel{
+    top:56px;
+    right:8px;
+    left:8px;
+    width:auto;
+    max-width:none;
+  }
+}

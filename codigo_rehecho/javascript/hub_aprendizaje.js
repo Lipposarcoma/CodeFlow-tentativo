@@ -146,6 +146,19 @@ function finishHub(){
   });
   S.hubResultType=best;
   showHubResult(best);
+  guardarPerfilHub();
+}
+
+// Guarda el resultado en el servidor para que no se pierda al cerrar sesión.
+// El servidor calcula el tipo a partir de los puntajes (no se fía del navegador).
+async function guardarPerfilHub(){
+  if(typeof authFetch!=='function')return;
+  const res=await authFetch('/juego/perfil',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(S.hubScores),
+  });
+  if(!res.ok)showToast('No se pudo guardar tu resultado. '+mensajeError(res));
 }
 
 // Muestra la pantalla de resultado con el perfil obtenido.

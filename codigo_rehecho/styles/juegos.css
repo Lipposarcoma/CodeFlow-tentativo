@@ -23,12 +23,12 @@
    border-color:rgba(242,166,90,.3);
 }
 .hub-refnote-icon{
-   font-size:19px;
+   font-size:calc(19px * var(--a11y-fs, 1));
    flex-shrink:0;
    line-height:1.3;
 }
 .hub-refnote-text{
-   font-size:11.5px;
+   font-size:calc(11.5px * var(--a11y-fs, 1));
    color:#8a7862;
    line-height:1.65;
 }
@@ -94,7 +94,7 @@
    box-shadow:none;
 }
 .hub-game-icon{
-   font-size:32px;
+   font-size:calc(32px * var(--a11y-fs, 1));
    margin-bottom:10px;
 }
 [data-theme="dark"] .hub-game-icon{
@@ -103,7 +103,7 @@
 .hub-game-title{
    font-family:var(--font-display);
    font-weight:800;
-   font-size:14.5px;
+   font-size:calc(14.5px * var(--a11y-fs, 1));
    color:#4A3B2F;
    margin-bottom:6px;
 }
@@ -111,7 +111,7 @@
    color:#F3E7DA;
 }
 .hub-game-desc{
-   font-size:11.5px;
+   font-size:calc(11.5px * var(--a11y-fs, 1));
    color:#7C6B58;
    line-height:1.55;
 }
@@ -121,7 +121,7 @@
 .hub-game-tag{
    display:inline-block;
    margin-top:11px;
-   font-size:9.5px;
+   font-size:calc(9.5px * var(--a11y-fs, 1));
    font-weight:700;
    letter-spacing:1px;
    text-transform:uppercase;

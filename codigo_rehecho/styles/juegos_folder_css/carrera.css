@@ -52,7 +52,7 @@
    border:none;
    text-align:center;
    font:inherit;
-   font-size:11px;
+   font-size:calc(11px * var(--a11y-fs, 1));
    font-weight:700;
    color:#fff;
    cursor:pointer;
@@ -86,7 +86,7 @@
    left:calc(50% - 23px);
    width:46px;
    height:46px;
-   font-size:32px;
+   font-size:calc(32px * var(--a11y-fs, 1));
    display:flex;
    align-items:center;
    justify-content:center;
@@ -100,7 +100,7 @@
    text-align:center;
    margin-top:12px;
    font-weight:700;
-   font-size:13px;
+   font-size:calc(13px * var(--a11y-fs, 1));
    min-height:18px;
    position:relative;
    z-index:2;
@@ -120,7 +120,7 @@
 .racer-score-title{
    font-family:var(--font-display);
    font-weight:900;
-   font-size:18px;
+   font-size:calc(18px * var(--a11y-fs, 1));
    color:#4A3B2F;
 }
 [data-theme="dark"] .racer-score-title{

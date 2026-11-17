@@ -53,8 +53,8 @@ function toggleTheme() {
   
   // Actualizamos el mensaje del toast con los íconos
   showToast(isDark 
-    ? '<span class="material-icons" style="font-size: 16px; vertical-align: text-bottom;">light_mode</span> Modo claro' 
-    : '<span class="material-icons" style="font-size: 16px; vertical-align: text-bottom;">dark_mode</span> Modo oscuro', 
+    ? '<span class="material-icons" style="font-size: calc(16px * var(--a11y-fs, 1)); vertical-align: text-bottom;">light_mode</span> Modo claro' 
+    : '<span class="material-icons" style="font-size: calc(16px * var(--a11y-fs, 1)); vertical-align: text-bottom;">dark_mode</span> Modo oscuro', 
     1600
   );
 }
@@ -74,11 +74,11 @@ function updateXpBar(){
   document.getElementById('level-name').innerHTML=ld.name;
   document.getElementById('level-sub').innerHTML='Nivel '+(idx+1)+' · '+S.xp+' XP';
   if(next){
-    document.getElementById('next-unlock-label').innerHTML='<span class="material-icons" style="font-size: 15px; vertical-align: text-bottom;">lock_open</span> Próximo: Nivel '+(idx+2)+' — '+next.name;
+    document.getElementById('next-unlock-label').innerHTML='<span class="material-icons" style="font-size: calc(15px * var(--a11y-fs, 1)); vertical-align: text-bottom;">lock_open</span> Próximo: Nivel '+(idx+2)+' — '+next.name;
     document.getElementById('next-unlock-desc').innerHTML='A '+(next.min-S.xp)+' XP · Desbloquea: '+next.unlock;
   }
   else{
-    document.getElementById('next-unlock-label').innerHTML='<span class="material-icons" style="font-size: 15px; vertical-align: text-bottom;">emoji_events</span> Nivel máximo alcanzado';
+    document.getElementById('next-unlock-label').innerHTML='<span class="material-icons" style="font-size: calc(15px * var(--a11y-fs, 1)); vertical-align: text-bottom;">emoji_events</span> Nivel máximo alcanzado';
     document.getElementById('next-unlock-desc').innerHTML='¡Has dominado la Red!';
   }
 }
@@ -95,7 +95,7 @@ function checkLevelUp(oldXp,newXp){
 function showLevelUpNotif(ld){
   const el=document.createElement('div');
   el.className='levelup-notif';
-  el.innerHTML=`<div style="font-size:50px;margin-bottom:10px">${ld.icon}</div><h2>¡Subiste de nivel!</h2><p style="font-size:15px;font-weight:700;color:var(--yellow);margin-bottom:6px">${ld.name}</p><p>Desbloqueaste: ${ld.unlock}</p>`;
+  el.innerHTML=`<div style="font-size:calc(50px * var(--a11y-fs, 1));margin-bottom:10px">${ld.icon}</div><h2>¡Subiste de nivel!</h2><p style="font-size:calc(15px * var(--a11y-fs, 1));font-weight:700;color:var(--yellow);margin-bottom:6px">${ld.name}</p><p>Desbloqueaste: ${ld.unlock}</p>`;
   document.body.appendChild(el);
   launchConfetti();
   setTimeout(()=>el.remove(),3100);
@@ -105,7 +105,7 @@ function showLevelUpNotif(ld){
 function showXp(t){
   const el=document.createElement('div');
   el.className='xp-flash';
-  el.innerHTML='<span class="material-icons" style="font-size: 14px; vertical-align: text-top; margin-right: 4px;">star</span>' + t;
+  el.innerHTML='<span class="material-icons" style="font-size: calc(14px * var(--a11y-fs, 1)); vertical-align: text-top; margin-right: 4px;">star</span>' + t;
   document.body.appendChild(el);
   setTimeout(()=>el.remove(),1900);
 }

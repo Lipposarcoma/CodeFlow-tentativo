@@ -53,7 +53,7 @@
    display:flex;
    align-items:center;
    justify-content:center;
-   font-size:28px;
+   font-size:calc(28px * var(--a11y-fs, 1));
    margin: 0 auto 12px auto;
    animation:candidateFloat 4s ease-in-out infinite;
 }
@@ -74,17 +74,17 @@
 }
 .dossier-name{
    font-family:var(--font-display);
-   font-size:15px;
+   font-size:calc(15px * var(--a11y-fs, 1));
    font-weight:800;
    color:var(--text);
 }
 .dossier-alias{
    font-weight:400;
    color:var(--muted);
-   font-size:11px;
+   font-size:calc(11px * var(--a11y-fs, 1));
 }
 .dossier-role{
-   font-size:10.5px;
+   font-size:calc(10.5px * var(--a11y-fs, 1));
    font-weight:700;
    color:var(--dc-color,#4F8EF7);
    text-transform:uppercase;
@@ -92,14 +92,14 @@
    margin-bottom:8px;
 }
 .dossier-desc{
-   font-size:11.5px;
+   font-size:calc(11.5px * var(--a11y-fs, 1));
    color:var(--muted);
    line-height:1.6;
    margin-bottom:8px;
 }
 .dossier-tag{
    display:inline-block;
-   font-size:9px;
+   font-size:calc(9px * var(--a11y-fs, 1));
    background:color-mix(in srgb,var(--dc-color,#4F8EF7) 10%,transparent);
    color:var(--dc-color,#4F8EF7);
    padding:2px 8px;
@@ -109,7 +109,7 @@
 }
 .dossier-artnote{
    margin-top:10px;
-   font-size:9.5px;
+   font-size:calc(9.5px * var(--a11y-fs, 1));
    color:var(--muted2);
    font-style:italic;
    border-top:1px dashed var(--border);

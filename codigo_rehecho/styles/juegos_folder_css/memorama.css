@@ -13,7 +13,7 @@
    margin:6px 0 4px;
    position:relative;
    z-index:2;
-   font-size:11.5px;
+   font-size:calc(11.5px * var(--a11y-fs, 1));
    color:#7C6B58;
    font-weight:700;
 }
@@ -45,7 +45,7 @@
    align-items:center;
    justify-content:center;
    font:inherit;
-   font-size:13px;
+   font-size:calc(13px * var(--a11y-fs, 1));
    font-weight:700;
    text-align:center;
    padding:6px;

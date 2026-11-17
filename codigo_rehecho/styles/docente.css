@@ -1,0 +1,37 @@
+/* Vistas del docente: Alumnos y Top 5 */
+.doc-estado{padding:40px 16px;text-align:center;color:var(--muted,#8b93a7);font-size:calc(14px * var(--a11y-fs, 1))}
+.doc-muted{color:var(--muted,#8b93a7);font-size:calc(13px * var(--a11y-fs, 1))}
+.doc-ok{color:var(--green,#34d399)}
+.doc-bad{color:var(--red,#f87171)}
+.doc-total{font-size:calc(13px * var(--a11y-fs, 1));color:var(--muted,#8b93a7);margin-left:4px}
+
+.doc-nombre{font-weight:600}
+.doc-correo{font-size:calc(12px * var(--a11y-fs, 1));color:var(--muted,#8b93a7);margin-top:2px;word-break:break-all}
+
+.doc-tabla-wrap{overflow-x:auto;border:1px solid var(--border,rgba(255,255,255,.1));border-radius:12px}
+.doc-tabla{width:100%;border-collapse:collapse;font-size:calc(14px * var(--a11y-fs, 1));min-width:720px}
+.doc-tabla th{text-align:left;font-size:calc(12px * var(--a11y-fs, 1));font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--muted,#8b93a7);padding:12px 14px;border-bottom:1px solid var(--border,rgba(255,255,255,.1))}
+.doc-tabla td{padding:12px 14px;vertical-align:middle;border-bottom:1px solid var(--border,rgba(255,255,255,.06))}
+.doc-tabla tr:last-child td{border-bottom:0}
+
+.doc-prog,.doc-split{height:8px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;display:flex;min-width:120px}
+.doc-prog span{display:block;height:100%;background:var(--accent,#6366f1);border-radius:99px}
+.doc-split-ok{background:var(--green,#34d399);height:100%}
+.doc-split-bad{background:var(--red,#f87171);height:100%}
+.doc-prog-txt,.doc-split-txt{font-size:calc(12px * var(--a11y-fs, 1));margin-top:5px;color:var(--muted,#8b93a7)}
+
+.doc-top{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.doc-top-item{display:grid;grid-template-columns:44px 1fr minmax(180px,260px);gap:16px;align-items:center;
+  padding:14px 16px;border:1px solid var(--border,rgba(255,255,255,.1));border-radius:12px}
+.doc-top-puesto{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:800;
+  background:rgba(255,255,255,.08)}
+.doc-top-1 .doc-top-puesto{background:#f5c542;color:#222}
+.doc-top-2 .doc-top-puesto{background:#c0c7d1;color:#222}
+.doc-top-3 .doc-top-puesto{background:#d38b5d;color:#222}
+.doc-nota{font-size:calc(12px * var(--a11y-fs, 1));color:var(--muted,#8b93a7);margin-top:14px}
+
+@media (max-width:700px){
+  .doc-top-item{grid-template-columns:36px 1fr}
+  .doc-top-barra{grid-column:1 / -1}
+}

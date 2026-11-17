@@ -4,6 +4,8 @@
    archivo:
      1. index.js            (declara y usa el objeto S compartido)
      2. lacaceria-datos.js  (declara el objeto MODS con el contenido)
+   Además usa, en tiempo de ejecución, authFetch() y mensajeError()
+   de auth.js (que se carga al final).
    ══════════════════════════════════════════════════════════ */
 
 /* — Progreso dentro de los módulos de "La Cacería".
@@ -20,6 +22,108 @@ S.qAttempts={};        // intentos por pregunta específica: '<mod>-<lvl>-<qIdx>
 S.qErrors={};          // errores por pregunta específica (misma clave)
 S.precisionHistory=[]; // últimas ~20 respuestas (true=correcta), para la línea de tiempo
 S.log=[];              // últimas ~30 respuestas con texto y hora, para el historial
+
+/* ══════════════════════════════════════════════════════════
+   MÓDULOS QUE YA USAN EL SERVIDOR (piloto)
+   Para estos módulos las preguntas se piden al backend (sin la
+   respuesta correcta) y es el servidor quien corrige, calcula
+   estrellas y XP, y guarda el progreso. Los demás módulos siguen
+   funcionando 100% en el navegador, como antes.
+   Para migrar otro módulo: agregar su número aquí.
+   ══════════════════════════════════════════════════════════ */
+const MODULOS_SERVIDOR=[1,2,3,4,5,6];
+function usaServidor(id){
+  return MODULOS_SERVIDOR.includes(Number(id));
+}
+
+// Escapa texto que viene de la base de datos antes de usarlo con innerHTML.
+function esc(t){
+  return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+S.partidaId=null;   // partida abierta en el servidor (nivel o boss en curso)
+S.srvFin=null;      // resultado final que el servidor calculó al terminar
+S.lastOk=false;     // ¿la última respuesta fue correcta?
+S.cargando=false;   // evita doble clic mientras se espera al servidor
+
+// Pide al servidor tu progreso guardado y lo pinta en el mapa.
+// auth.js la llama justo después de iniciar sesión.
+async function cargarProgresoServidor(){
+  const res=await authFetch('/juego/progreso');
+  if(!res.ok){
+    showToast('No se pudo cargar tu progreso. '+mensajeError(res));
+    return;
+  }
+  const d=res.datos;
+  d.niveles.forEach(n=>{
+    if(usaServidor(n.modulo))S.done[`${n.modulo}-${n.nivel-1}`]=n.estrellas;
+  });
+  d.jefes.forEach(m=>{
+    if(usaServidor(m))S.bossDone[m]=true;
+  });
+  S.xp=d.xp_total;
+  // Racha de aciertos guardada (sigue desde donde quedó la última vez)
+  S.streak=d.racha||0;
+  S.maxStreak=Math.max(S.maxStreak,d.racha_max||0);
+  animateStat('streak-val',S.streak);
+  // Resultado del cuestionario del Hub, si ya lo había hecho
+  if(d.perfil&&typeof HUB_QUIZ!=='undefined'){
+    S.hubScores=d.perfil.puntajes;
+    S.hubResultType=d.perfil.tipo;
+    const hubActivo=document.getElementById('view-hub-quiz');
+    if(hubActivo&&hubActivo.classList.contains('active')&&typeof openHub==='function')openHub();
+  }
+  Object.keys(MODS).forEach(id=>{
+    buildPath(id);
+    updateRing(id);
+  });
+  updateXpBar();
+  animateStat('total-xp',S.xp);
+}
+
+// Abre una partida en el servidor (nivel 1-5, o 6 = boss).
+// Devuelve {qs, tiempoLimite} con las preguntas ya en el formato que
+// espera el motor, o null si el servidor la rechazó (ya avisó con un toast).
+async function abrirPartida(modulo,nivel){
+  const res=await authFetch('/juego/partidas',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({modulo:Number(modulo),nivel}),
+  });
+  if(!res.ok){
+    showToast(mensajeError(res));
+    return null;
+  }
+  const icono=nivel===6
+    ?'<span class="material-icons" style="font-size: 1em; vertical-align: middle;">dangerous</span>'
+    :MODS[modulo].icon;
+  S.partidaId=res.datos.partida_id;
+  return{
+    qs:res.datos.preguntas.map(q=>({
+      id:q.id,
+      concept:esc(q.concepto),
+      icon:icono,
+      text:esc(q.texto),
+      opts:q.opciones.map(esc),
+      orden:q.orden,   // posición ORIGINAL de cada opción mostrada (las opciones vienen mezcladas)
+    })),
+    tiempoLimite:res.datos.tiempo_limite,
+  };
+}
+
+// Envía una respuesta al servidor. Devuelve su veredicto, o null si falló.
+async function responderServidor(q,opcion){
+  const res=await authFetch(`/juego/partidas/${S.partidaId}/responder`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({pregunta_id:q.id,opcion}),
+  });
+  if(!res.ok){
+    showToast(mensajeError(res));
+    return null;
+  }
+  return res.datos;
+}
 
 /* ══════════════════════════════════════════════════════════
    MÓDULOS DE "LA CACERÍA"
@@ -164,12 +268,26 @@ function closeStory(){
    ══════════════════════════════════════════════════════════ */
 
 // Abre la vista de ejercicio y comienza el nivel elegido.
-function startLevel(id,lvlIdx){
+async function startLevel(id,lvlIdx){
+  if(S.cargando)return;
+  let qs;
+  if(usaServidor(id)){
+    S.cargando=true;
+    const partida=await abrirPartida(id,lvlIdx+1);
+    S.cargando=false;
+    if(!partida)return;           // el servidor dijo que no (ya se avisó)
+    qs=partida.qs;
+  }else{
+    S.partidaId=null;
+    qs=MODS[id].levels[lvlIdx].q;
+  }
+
   S.mod=id;
   S.lvl=lvlIdx;
   S.qIdx=0;
-  S.qs=MODS[id].levels[lvlIdx].q;
+  S.qs=qs;
   S.sel=null;
+  S.srvFin=null;
   S.levelErrors=0;
   S.isBoss=false;
 
@@ -187,7 +305,7 @@ function startLevel(id,lvlIdx){
   const m=MODS[id];
   const badge=document.getElementById('ex-mod-badge');
   badge.innerHTML=`${m.icon} ${m.name}`;
-  badge.style.cssText=`background:${m.color}1f;border:1px solid ${m.color}3d;color:${m.color};display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:100px;font-size:11px;font-weight:700;flex-shrink:0;`;
+  badge.style.cssText=`background:${m.color}1f;border:1px solid ${m.color}3d;color:${m.color};display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:100px;font-size:calc(11px * var(--a11y-fs, 1));font-weight:700;flex-shrink:0;`;
   document.getElementById('progress-bar').classList.remove('boss-fill');
 
   loadQ();
@@ -236,10 +354,36 @@ function selOpt(el,i){
 }
 
 // Valida la respuesta seleccionada frente a la correcta.
-function checkAnswer(){
+async function checkAnswer(){
   if(S.sel===null)return;
   const q=S.qs[S.qIdx];
-  const ok=S.sel===q.ok;
+  const sel=S.sel;
+  let ok,retro,pista,idxCorrecta;
+
+  if(usaServidor(S.mod)){
+    // El servidor corrige. El navegador ni siquiera conoce la respuesta.
+    const btn=document.getElementById('btn-check');
+    btn.disabled=true;
+    const r=await responderServidor(q,q.orden[sel]);   // se envía la posición original, no la mostrada
+    if(!r){btn.disabled=false;return;}
+    if(r.estado==='expirada'){           // se acabó el tiempo del boss
+      stopBossTimer();
+      hideBanner();
+      showBossResult(false);
+      return;
+    }
+    ok=r.correcta;
+    retro=esc(r.retro||'');
+    pista=esc(r.pista||'');
+    idxCorrecta=ok?sel:null;             // si falló, NO se revela cuál era
+    S.srvFin=r.completado?r:null;
+  }else{
+    ok=sel===q.ok;
+    retro=q.fb;
+    pista=q.err;
+    idxCorrecta=q.ok;
+  }
+  S.lastOk=ok;
 
   // — Registro para Analítica Docente —
   S.attempts++;
@@ -265,8 +409,8 @@ function checkAnswer(){
 
   document.querySelectorAll('.option-item').forEach((o,i)=>{
     o.disabled=true;
-    if(i===q.ok)o.classList.add('correct-anim');
-    else if(i===S.sel&&!ok)o.classList.add('wrong-anim');
+    if(i===idxCorrecta)o.classList.add('correct-anim');
+    else if(i===sel&&!ok)o.classList.add('wrong-anim');
   });
 
   document.getElementById('btn-check').style.display='none';
@@ -274,7 +418,7 @@ function checkAnswer(){
   const banner=document.getElementById('feedback-banner');
   banner.className='feedback-banner show '+(ok?'correct':'error');
   document.getElementById('fb-title').innerHTML=ok?'<span class="material-icons" style="font-size: 1em; vertical-align: middle;">auto_awesome</span> ¡Excelente deducción!':'<span class="material-icons" style="font-size: 1em; vertical-align: middle;">close</span> Detente a pensar';
-  document.getElementById('fb-desc').innerHTML=ok?q.fb:'Pista: '+q.err;
+  document.getElementById('fb-desc').innerHTML=ok?retro:'Pista: '+pista;
   const nextBtn=document.getElementById('btn-next');
   nextBtn.className='btn-next '+(ok?'success':'retry');
   nextBtn.innerHTML=ok?'Continuar →':'Reintentar →';
@@ -299,8 +443,7 @@ function hideBanner(){
 
 // Avanza a la siguiente pregunta, o reintenta la misma si falló.
 function nextQuestion(){
-  const q=S.qs[S.qIdx];
-  if(S.sel!==q.ok){
+  if(!S.lastOk){
     loadQ();
     return;
   }
@@ -324,14 +467,21 @@ function nextQuestion(){
 // permite ganar el XP restante si mejoras tus estrellas), actualiza
 // el progreso del módulo y muestra el modal de "nivel superado".
 function finishLevel(){
-  const stars=S.levelErrors===0?3:S.levelErrors<=1?2:1;
   const key=`${S.mod}-${S.lvl}`;
   const prevStars=S.done[key]||0;
 
-  let xpGained=0;
+  let stars,xpGained=0;
   const oldXp=S.xp;
-  if(stars>prevStars){
-    xpGained=(stars-prevStars)*20;
+  if(S.srvFin){
+    // Módulo del servidor: estrellas y XP vienen ya calculados.
+    stars=S.srvFin.estrellas;
+    xpGained=S.srvFin.xp_ganado;
+    S.srvFin=null;
+  }else{
+    stars=S.levelErrors===0?3:S.levelErrors<=1?2:1;
+    if(stars>prevStars)xpGained=(stars-prevStars)*20;
+  }
+  if(xpGained>0){
     S.xp+=xpGained;
     updateXpBar();
     animateStat('total-xp',S.xp);
@@ -413,7 +563,10 @@ function startBoss(id){
   S.bossStarted=false;
   S.bossErrors=0;
   S.bossCorrect=0;
-  S.qs=MODS[id].boss.questions;
+  // En módulos del servidor las preguntas se piden al pulsar "Enfrentar"
+  // (así el reloj del boss no corre mientras lees la introducción).
+  S.qs=usaServidor(id)?[]:MODS[id].boss.questions;
+  S.srvFin=null;
   S.qIdx=0;
   S.sel=null;
 
@@ -422,10 +575,11 @@ function startBoss(id){
 
   const m=MODS[id];
   const boss=m.boss;
+  const nPreg=boss.numPreguntas||boss.questions.length;
 
   const badge=document.getElementById('ex-mod-badge');
   badge.innerHTML='<span class="material-icons" style="font-size: 1em; vertical-align: middle;">dangerous</span> BOSS FIGHT';
-  badge.style.cssText='background:rgba(220,38,38,.12);border:1px solid rgba(220,38,38,.3);color:#f87171;display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:100px;font-size:11px;font-weight:700;flex-shrink:0;';
+  badge.style.cssText='background:rgba(220,38,38,.12);border:1px solid rgba(220,38,38,.3);color:#f87171;display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:100px;font-size:calc(11px * var(--a11y-fs, 1));font-weight:700;flex-shrink:0;';
   document.getElementById('exercise-question-wrap').style.display='none';
   document.getElementById('boss-result-container').innerHTML='';
   document.getElementById('progress-bar').classList.add('boss-fill');
@@ -436,10 +590,10 @@ function startBoss(id){
       <span class="boss-intro-skull">${boss.centinela.emoji}</span>
       <h2>${boss.name}</h2>
       <p style="font-style:italic;color:var(--muted);margin-bottom:6px">${boss.centinela.quote}</p>
-      <p>El Centinela del ${m.nodo} guarda la certificación de ${m.candidateName}. Es una <strong>evaluación integradora</strong> que combina todos los conceptos del módulo. Tienes <strong>${boss.time} segundos</strong> para responder ${boss.questions.length} preguntas. Cada error cuenta. ¿Estás preparado?</p>
+      <p>El Centinela del ${m.nodo} guarda la certificación de ${m.candidateName}. Es una <strong>evaluación integradora</strong> que combina todos los conceptos del módulo. Tienes <strong>${boss.time} segundos</strong> para responder ${nPreg} preguntas. Cada error cuenta. ¿Estás preparado?</p>
       <div class="boss-intro-rules">
         <div class="boss-rule">⏱ ${boss.time}s límite</div>
-        <div class="boss-rule"><span class="material-icons" style="font-size: 1em; vertical-align: middle;">help_outline</span> ${boss.questions.length} preguntas</div>
+        <div class="boss-rule"><span class="material-icons" style="font-size: 1em; vertical-align: middle;">help_outline</span> ${nPreg} preguntas</div>
         <div class="boss-rule"><span class="material-icons" style="font-size: 1em; vertical-align: middle;">star</span> +40 XP por pregunta</div>
         <div class="boss-rule"><span class="material-icons" style="font-size: 1em; vertical-align: middle;">emoji_events</span> Desbloquea certificado</div>
       </div>
@@ -448,14 +602,25 @@ function startBoss(id){
 }
 
 // Arranca la pelea: temporizador en cuenta regresiva y primera pregunta.
-function launchBoss(id){
+async function launchBoss(id){
+  if(S.cargando)return;
+  let limite=MODS[id].boss.time;
+  if(usaServidor(id)){
+    S.cargando=true;
+    const partida=await abrirPartida(id,6);
+    S.cargando=false;
+    if(!partida)return;
+    S.qs=partida.qs;
+    if(partida.tiempoLimite)limite=partida.tiempoLimite;   // manda el servidor
+  }
+
   S.bossStarted=true;
   document.getElementById('boss-intro-container').innerHTML='';
   document.getElementById('exercise-question-wrap').style.display='';
   document.getElementById('question-container').classList.add('boss-mode');
   document.getElementById('boss-timer-wrap').style.display='flex';
 
-  S.bossTimeLeft=MODS[id].boss.time;
+  S.bossTimeLeft=limite;
   updateBossTimerDisplay();
   S.bossTimer=setInterval(()=>{
     S.bossTimeLeft--;
@@ -503,8 +668,10 @@ function showBossResult(victory){
   let xpGained=0;
   if(victory){
     const alreadyDone=!!S.bossDone[S.mod];
-    if(!alreadyDone){
-      xpGained=S.bossCorrect*40;
+    if(S.srvFin)xpGained=S.srvFin.xp_ganado;       // módulo del servidor
+    else if(!alreadyDone)xpGained=S.bossCorrect*40;
+    S.srvFin=null;
+    if(xpGained>0){
       const oldXp=S.xp;
       S.xp+=xpGained;
       updateXpBar();

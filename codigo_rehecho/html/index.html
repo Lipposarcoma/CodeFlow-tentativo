@@ -16,6 +16,9 @@
 <link rel="stylesheet" href="/codigo_rehecho/styles/juegos_folder_css/memorama.css">
 <link rel="stylesheet" href="/codigo_rehecho/styles/juegos_folder_css/secuencia.css">
 <link rel="stylesheet" href="/codigo_rehecho/styles/juegos_folder_css/carrera.css">
+<link rel="stylesheet" href="/codigo_rehecho/styles/auth.css">
+<link rel="stylesheet" href="/codigo_rehecho/styles/docente.css">
+<link rel="stylesheet" href="/codigo_rehecho/styles/accesibilidad.css">
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body>
@@ -38,18 +41,18 @@
   <div class="sidebar-glow"></div>
   <div class="brand"><div class="brand-icon"><span class="material-icons" style="font-size: 1em; vertical-align: middle;">track_changes</span></div>CODE<span>FLOW</span></div>
 
-  <div class="level-badge" id="level-badge">
-    <div id="level-icon" style="font-size:18px"><span class="material-icons" style="font-size: 1em; vertical-align: middle;">eco</span></div>
+  <div class="level-badge" id="level-badge" data-solo-rol="estudiante">
+    <div id="level-icon" style="font-size:calc(18px * var(--a11y-fs, 1))"><span class="material-icons" style="font-size: 1em; vertical-align: middle;">eco</span></div>
     <div>
       <div class="level-badge-name" id="level-name">Aprendiz</div>
       <div class="level-badge-sub" id="level-sub">Nivel 1 · 0 XP</div>
     </div>
   </div>
-  <div class="xp-sidebar-wrap">
+  <div class="xp-sidebar-wrap" data-solo-rol="estudiante">
     <div class="xp-sidebar-label"><span>Progreso</span><span id="xp-label-val">0 / 100 XP</span></div>
     <div class="xp-sidebar-bar"><div class="xp-sidebar-fill" id="xp-bar-fill" style="width:0%"></div></div>
   </div>
-  <div class="cosmetic-hint" id="cosmetic-hint">
+  <div class="cosmetic-hint" id="cosmetic-hint" data-solo-rol="estudiante">
     <strong id="next-unlock-label"><span class="material-icons" style="font-size: 1em; vertical-align: middle;">lock_open</span> Próximo: Nivel 2</strong>
     <span id="next-unlock-desc">Alcanza 100 XP para desbloquear el tema Galaxia</span>
   </div>
@@ -64,7 +67,10 @@
     <p class="nav-section">Plataforma</p>
     <button type="button" class="nav-item" data-label="La Cacería" data-view="view-map" onclick="navTo(this)"><span class="material-icons nav-icon">map</span> La Cacería</button>
     <button type="button" class="nav-item" data-label="Expedientes" data-view="view-dossier" onclick="navTo(this)"><span class="material-icons nav-icon">folder_shared</span> Expedientes</button>
-    <button type="button" class="nav-item" data-label="Analítica Docente" data-view="view-analytics" onclick="navTo(this)"><span class="material-icons nav-icon">analytics</span> Analítica Docente</button>
+    <p class="nav-section" data-solo-rol="docente">Docente</p>
+    <button type="button" class="nav-item" data-label="Analítica Docente" data-view="view-analytics" data-solo-rol="docente" onclick="navTo(this)"><span class="material-icons nav-icon">analytics</span> Analítica Docente</button>
+    <button type="button" class="nav-item" data-label="Alumnos" data-view="view-alumnos" data-solo-rol="docente" onclick="navTo(this)"><span class="material-icons nav-icon">groups</span> Alumnos</button>
+    <button type="button" class="nav-item" data-label="Top 5" data-view="view-top" data-solo-rol="docente" onclick="navTo(this)"><span class="material-icons nav-icon">emoji_events</span> Top 5</button>
 
     <p class="nav-section">Recursos</p>
     <button type="button" class="nav-item" data-label="Glosario Técnico" data-view="view-glossary" onclick="navTo(this)"><span class="material-icons nav-icon">menu_book</span> Glosario Técnico</button>
@@ -72,8 +78,9 @@
   </nav>
 
   <footer class="sidebar-footer">
-    <p><strong>Modo Anónimo</strong><span class="status-dot"></span>ID: ND-2026X · Sesión activa</p>
-  </footer>
+  <p><strong id="user-name">—</strong><span class="status-dot"></span><span id="user-role">—</span></p>
+  <button type="button" class="logout-btn" id="logout-btn">Cerrar sesión</button>
+</footer>
 </aside>
 
 <!-- ════════════════════════════════════════════════════════
@@ -209,17 +216,13 @@
     <div class="analytics-header">
       <div>
         <h1 class="analytics-title">Analítica Docente</h1>
-        <p class="analytics-sub">Datos agregados · Anonimato total</p>
+        <p class="analytics-sub">Resumen de tus secciones · datos reales de tus alumnos</p>
       </div>
       <div class="analytics-actions">
         <div class="section-selector">
           <label for="section-select">Sección</label>
           <select class="section-select" id="section-select" onchange="refreshAnalytics()">
-            <option value="all">Todas</option>
-            <option value="A">Sección A</option>
-            <option value="B">Sección B</option>
-            <option value="C">Sección C</option>
-            <option value="D">Sección D</option>
+            <option value="">Todas mis secciones</option>
           </select>
         </div>
         <button type="button" class="btn-export" onclick="showExportInfo()"><span class="material-icons" style="font-size: 1em; vertical-align: middle;">file_download</span> Exportar Dataset</button>
@@ -231,8 +234,8 @@
       <div class="export-hint-icon" aria-hidden="true"><span class="material-icons" style="font-size: 1em; vertical-align: middle;">cell_tower</span></div>
       <div>
         <p class="export-hint-title">Exportación de Dataset para Power BI / Tableau</p>
-        <p class="export-hint-desc">Este módulo genera un archivo <strong>.csv</strong> estructurado con datos anonimizados por sesión, listos para conectarse a herramientas de BI. También disponible como endpoint REST para dashboards en tiempo real. <strong>Los datos exportados son siempre anónimos y conformes con Ley N°19.628.</strong></p>
-        <code class="export-schema">session_id, module_id, module_name, level_idx, question_concept, is_correct, attempt_num, timestamp_iso, xp_earned, error_count</code>
+        <p class="export-hint-desc">Genera un archivo <strong>.csv</strong> con las respuestas de la sección elegida, listo para conectarse a herramientas de BI. <strong>No incluye nombres ni correos:</strong> cada alumno aparece solo con un número de identificación.</p>
+        <code class="export-schema">seccion, alumno_id, modulo, nivel, concepto, es_boss, es_correcta, fecha_iso</code>
         <div class="export-btn-row">
           <button type="button" class="export-btn export-btn-csv" onclick="downloadCSV()"><span class="material-icons" style="font-size: 1em; vertical-align: middle;">download</span> Descargar .csv</button>
           <button type="button" class="export-btn export-btn-api" onclick="showToast('<span class=&quot;material-icons&quot; style=&quot;font-size: 1em; vertical-align: middle;&quot;>power</span> Endpoint API: próximamente disponible en docs.nodo.gg/api',3000)"><span class="material-icons" style="font-size: 1em; vertical-align: middle;">cell_tower</span> Copiar API Endpoint</button>
@@ -244,18 +247,18 @@
     <div class="privacy-notice">
       <div class="privacy-icon" aria-hidden="true"><span class="material-icons" style="font-size: 1em; vertical-align: middle;">lock</span></div>
       <div>
-        <p class="privacy-title">Datos anónimos y agregados · Contexto educacional</p>
-        <p class="privacy-desc">NODO opera bajo <strong>anonimato total</strong>: los IDs de sesión (ND-XXXXXX) son temporales y descartables, conformes con la Ley N°19.628 y principios FERPA. Los docentes acceden únicamente a <strong>estadísticas por sección</strong>, nunca a perfiles individuales.</p>
+        <p class="privacy-title">Uso de los datos · Contexto educacional</p>
+        <p class="privacy-desc">Estos datos son del progreso y las respuestas de <strong>los alumnos de tus secciones</strong> y se usan solo con fines educativos. Solo puedes ver tus propias secciones, y el dataset exportado no incluye nombres ni correos.</p>
       </div>
     </div>
 
     <div class="a-grid">
-      <div class="a-card"><div class="a-label">Precisión global</div><div class="a-value" id="a-acc">—</div><div class="a-sub">1er intento correcto</div></div>
-      <div class="a-card"><div class="a-label">Sesiones estimadas</div><div class="a-value" id="a-sessions">0</div><div class="a-sub">esta semana</div></div>
-      <div class="a-card"><div class="a-label">Niveles completados</div><div class="a-value" id="a-lvls">0</div><div class="a-sub">de 36 totales</div></div>
+      <div class="a-card"><div class="a-label">Precisión global</div><div class="a-value" id="a-acc">—</div><div class="a-sub">respuestas correctas</div></div>
+      <div class="a-card"><div class="a-label">Alumnos activos</div><div class="a-value" id="a-sessions">0</div><div class="a-sub">últimos 7 días</div></div>
+      <div class="a-card"><div class="a-label">Niveles completados</div><div class="a-value" id="a-lvls">0</div><div class="a-sub" id="a-lvls-sub">de 36 posibles</div></div>
       <div class="a-card"><div class="a-label">Total intentos</div><div class="a-value" id="a-att">0</div><div class="a-sub">respuestas emitidas</div></div>
       <div class="a-card"><div class="a-label">Errores</div><div class="a-value" id="a-err" style="color:var(--red)">0</div><div class="a-sub">requieren refuerzo</div></div>
-      <div class="a-card"><div class="a-label">Racha máxima</div><div class="a-value"><span class="material-icons" style="font-size: 1em; vertical-align: middle;">local_fire_department</span> <span id="a-str">0</span></div><div class="a-sub">aciertos seguidos</div></div>
+      <div class="a-card"><div class="a-label">Racha máxima</div><div class="a-value"><span class="material-icons" style="font-size: 1em; vertical-align: middle;">local_fire_department</span> <span id="a-str">0</span></div><div class="a-sub">aciertos seguidos (un alumno)</div></div>
     </div>
 
     <div class="chart-row chart-row-wide-narrow">
@@ -339,6 +342,40 @@
         <p class="chart-empty">Sin actividad · Completa un ejercicio</p>
       </div>
     </div>
+  </section>
+
+  <!-- VISTA: ALUMNOS (docente) -->
+  <section id="view-alumnos" class="view-container" data-onshow="cargarAlumnos">
+    <div class="analytics-header">
+      <div>
+        <h1 class="analytics-title">Alumnos <span class="doc-total" id="alumnos-total"></span></h1>
+        <p class="analytics-sub">Progreso individual de tu sección</p>
+      </div>
+      <div class="analytics-actions">
+        <div class="section-selector">
+          <label for="alumnos-seccion">Sección</label>
+          <select class="section-select" id="alumnos-seccion" onchange="cargarAlumnos()"></select>
+        </div>
+      </div>
+    </div>
+    <div id="alumnos-contenido"></div>
+  </section>
+
+  <!-- VISTA: TOP 5 (docente) -->
+  <section id="view-top" class="view-container" data-onshow="cargarTop5">
+    <div class="analytics-header">
+      <div>
+        <h1 class="analytics-title">Top 5 mejores alumnos</h1>
+        <p class="analytics-sub">Por porcentaje de aciertos y fallos</p>
+      </div>
+      <div class="analytics-actions">
+        <div class="section-selector">
+          <label for="top-seccion">Sección</label>
+          <select class="section-select" id="top-seccion" onchange="cargarTop5()"></select>
+        </div>
+      </div>
+    </div>
+    <div id="top-contenido"></div>
   </section>
 
   <!-- VISTA: GLOSARIO TÉCNICO -->
@@ -719,7 +756,7 @@
     <span class="modal-emoji" id="m-emoji" aria-hidden="true"><span class="material-icons" style="font-size:inherit;">celebration</span></span>
     <h2 class="modal-title" id="m-title">¡Nivel superado!</h2>
     <div class="modal-stars" id="m-stars"></div>
-    <div class="modal-xp" id="m-xp"><span class="material-icons" style="font-size: 14px; vertical-align: text-top; margin-right: 4px;">star</span> +60 XP</div>
+    <div class="modal-xp" id="m-xp"><span class="material-icons" style="font-size: calc(14px * var(--a11y-fs, 1)); vertical-align: text-top; margin-right: 4px;">star</span> +60 XP</div>
     <div class="modal-subtitle" id="m-sub"></div>
     <button type="button" class="modal-btn" id="modal-next-btn" onclick="goToNextLevel()">Siguiente nivel →</button>
     <button type="button" class="modal-btn-secondary" onclick="closeModal()">Volver al mapa →</button>
@@ -745,6 +782,101 @@
   </div>
 </div>
 
+<!-- ══ PANTALLA DE ACCESO (login / registro) ══ -->
+<section class="auth-screen" id="auth-screen" aria-labelledby="auth-title">
+  <div class="auth-card">
+    <h1 class="auth-title" id="auth-title">Code<span>Flow</span></h1>
+    <p class="auth-sub">Accede con tu cuenta institucional de Duoc UC</p>
+
+    <div class="auth-tabs" role="tablist" aria-label="Acceso">
+      <button type="button" class="auth-tab active" id="tab-login" role="tab"
+              aria-selected="true" aria-controls="panel-login">Ingresar</button>
+      <button type="button" class="auth-tab" id="tab-registro" role="tab"
+              aria-selected="false" aria-controls="panel-registro">Registrarme</button>
+    </div>
+
+    <!-- Panel: Ingresar -->
+    <form class="auth-form active" id="panel-login" role="tabpanel" aria-labelledby="tab-login" novalidate>
+      <label class="auth-label" for="login-correo">Correo institucional</label>
+        <input class="auth-input" id="login-correo" type="email" autocomplete="username" required>
+      <label class="auth-label" for="login-clave">Contraseña</label>
+      <div class="auth-pass">
+        <input class="auth-input" id="login-clave" type="password" autocomplete="current-password" required>
+          <button type="button" class="auth-eye" data-target="login-clave" aria-label="Mostrar contraseña" aria-pressed="false">
+            <span class="material-icons" aria-hidden="true">visibility</span>
+          </button>
+      </div>
+        <p class="auth-error" id="login-error" role="alert"></p>
+          <button type="submit" class="auth-submit">Ingresar</button>
+    </form>
+
+    <!-- Panel: Registrarme -->
+    <form class="auth-form" id="panel-registro" role="tabpanel"
+          aria-labelledby="tab-registro" novalidate hidden>
+      <label class="auth-label" for="reg-nombre">Nombre completo</label>
+      <input class="auth-input" id="reg-nombre" type="text"
+             autocomplete="name" minlength="2" maxlength="100" required>
+
+      <label class="auth-label" for="reg-correo">Correo institucional</label>
+      <input class="auth-input" id="reg-correo" type="email"
+             autocomplete="username" required>
+
+      <label class="auth-label" for="reg-clave">Contraseña</label>
+        <div class="auth-pass">
+          <input class="auth-input" id="reg-clave" type="password" autocomplete="new-password" minlength="8" required aria-describedby="reg-clave-aviso">
+            <button type="button" class="auth-eye" data-target="reg-clave" aria-label="Mostrar contraseña" aria-pressed="false">
+              <span class="material-icons" aria-hidden="true">visibility</span>
+            </button>
+        </div>
+        <div class="auth-meter" id="reg-clave-meter" aria-hidden="true"></div>
+            <p class="auth-hint" id="reg-clave-aviso" aria-live="polite"></p>
+              <label class="auth-label" for="reg-clave2">Repite la contraseña</label>
+        <div class="auth-pass">
+          <input class="auth-input" id="reg-clave2" type="password" autocomplete="new-password" required aria-describedby="reg-clave2-aviso">
+            <button type="button" class="auth-eye" data-target="reg-clave2" aria-label="Mostrar contraseña" aria-pressed="false">
+              <span class="material-icons" aria-hidden="true">visibility</span>
+            </button>
+        </div>
+          <p class="auth-hint" id="reg-clave2-aviso" aria-live="polite"></p>
+
+      <div id="reg-seccion-wrap">
+        <label class="auth-label" for="reg-seccion">Sección</label>
+          <select class="auth-input" id="reg-seccion">
+            <option value="">Selecciona tu sección</option>
+          </select>
+      </div>
+
+      <label class="auth-check">
+        <input type="checkbox" id="reg-terminos" required>
+        <span>Acepto los
+          <button type="button" class="auth-link" id="open-terminos">términos y condiciones</button>
+        </span>
+      </label>
+
+      <p class="auth-error" id="reg-error" role="alert"></p>
+      <button type="submit" class="auth-submit">Crear cuenta</button>
+    </form>
+  </div>
+</section>
+
+<!-- Modal: términos y condiciones -->
+<div class="terminos-modal" id="terminos-modal" role="dialog" aria-modal="true"
+     aria-labelledby="terminos-title" hidden>
+  <div class="terminos-box">
+    <h2 id="terminos-title">Términos y condiciones</h2>
+    <p class="terminos-draft">Borrador de prueba (v1.0). Debe ser redactado y
+       revisado antes de usar la plataforma con estudiantes reales.</p>
+    <div class="terminos-text" tabindex="0">
+      <p>CodeFlow es una plataforma educativa de Duoc UC para practicar lógica de programación.</p>
+      <p>Al registrarte, aceptas que se guarde tu nombre, correo institucional,
+         sección y tu progreso y respuestas dentro de la plataforma.</p>
+      <p>Tu docente podrá ver tu progreso y tus resultados de tu sección.</p>
+      <p>Tus datos se usan solo con fines educativos y de mejora de la plataforma.</p>
+    </div>
+    <button type="button" class="auth-submit" id="close-terminos">Entendido</button>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script src="/codigo_rehecho/javascript/index.js"></script>
@@ -760,5 +892,9 @@
 <script src="/codigo_rehecho/javascript/lacaceria-datos.js"></script>
 <script src="/codigo_rehecho/javascript/lacaceria.js"></script>
 <script src="/codigo_rehecho/javascript/analitica_docente.js"></script>
+<script src="/codigo_rehecho/javascript/docente.js"></script>
+<script src="/codigo_rehecho/javascript/accesibilidad.js"></script>
+<script src="/codigo_rehecho/javascript/auth.js"></script>
+
 </body>
 </html>
